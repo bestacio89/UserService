@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../common.targets" />
+
+  <ItemGroup>
+	 
+	  <PackageReference Include="Franz.Common.Caching"/>
+	 
+	  <PackageReference Include="Franz.Common.EntityFramework"/>
+	 
+	  <PackageReference Include="Franz.Common.EntityFramework.PostGres"/>
+	 
+	  <PackageReference Include="Franz.Common.Hosting"/>
+	 
+	  
+	  
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Configurations\" />
+    <Folder Include="Depots\" />
+    <Folder Include="Migrations\" />
+    <Folder Include="Persistence\Seeders\NewFolder\" />
+    <Folder Include="Semoirs\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UserService.Contracts\UserService.Contracts.csproj" />
+    <ProjectReference Include="..\UserService.Domain\UserService.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
+
+
