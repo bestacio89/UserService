@@ -1,78 +1,101 @@
-using UserService.Domain.Entities;
-using UserService.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Franz.Common.Business.Domain;
 using Franz.Common.EntityFramework;
 using Franz.Common.Mediator.Dispatchers;
-using Microsoft.EntityFrameworkCore;
 
-namespace UserService.Persistence
+using UserService.Domain.Users;
+using UserService.Domain.Ranked;
+using UserService.Domain.Progression;
+using UserService.Domain.Identity;
+
+namespace UserService.Persistence;
+
+public class ApplicationDbContext : DbContextBase
 {
-  public class ApplicationDbContext : DbContextBase
+  public ApplicationDbContext(
+      DbContextOptions<ApplicationDbContext> options,
+      IDispatcher dispatcher
+  ) : base(options, dispatcher)
   {
-    public ApplicationDbContext(
-        DbContextOptions<ApplicationDbContext> options,
-        IDispatcher dispatcher // UserService mediator dispatcher
-    ) : base(options, dispatcher)
-    {
-    }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-      base.OnModelCreating(modelBuilder);
-
-      // Configure Value Objects for Book
-      modelBuilder.Entity<Book>(builder =>
-      {
-        builder.OwnsOne(b => b.Isbn, isbn =>
-        {
-          isbn.Property(p => p.Value)
-              .HasColumnName("Isbn")
-              .IsRequired();
-        });
-
-        builder.OwnsOne(b => b.Title, title =>
-        {
-          title.Property(p => p.Value)
-              .HasColumnName("Title")
-              .IsRequired();
-        });
-
-        builder.OwnsOne(b => b.Author, author =>
-        {
-          author.Property(p => p.Value)
-              .HasColumnName("Author")
-              .IsRequired();
-        });
-      });
-
-      // Configure Value Objects for Member
-      modelBuilder.Entity<Member>(builder =>
-      {
-        builder.OwnsOne(m => m.Name, name =>
-        {
-          name.Property(p => p.Value)
-              .HasColumnName("Name")
-              .IsRequired();
-        });
-
-        builder.OwnsOne(m => m.Email, email =>
-        {
-          email.Property(p => p.Value)
-              .HasColumnName("Email")
-              .IsRequired();
-        });
-      });
-
-      // Apply seeders (if any)
-      // modelBuilder.ApplyConfiguration(new BookSeeder());
-      // modelBuilder.ApplyConfiguration(new MemberSeeder());
-    }
-
-    public DbSet<Book> Books { get; set; } = null!;
-    public DbSet<Member> Members { get; set; } = null!;
-
-    // Later: DbSet<Loan>, DbSet<Reservation>, etc.
   }
+
+  protected override void OnModelCreating(ModelBuilder modelBuilder)
+  {
+    base.OnModelCreating(modelBuilder);
+
+    // =========================
+    // USER
+    // =========================
+    modelBuilder.Entity<User>(builder =>
+    {
+      builder.Property(x => x.Username)
+          .IsRequired()
+          .HasMaxLength(50);
+
+      builder.Property(x => x.State)
+          .IsRequired();
+
+      builder.Property(x => x.StatusReason)
+          .HasMaxLength(500);
+
+      builder.Property(x => x.SuspendedUntil);
+    });
+
+    // =========================
+    // USER RANK
+    // =========================
+    modelBuilder.Entity<UserRank>(builder =>
+    {
+      builder.Property(x => x.UserId).IsRequired();
+      builder.Property(x => x.MMR).IsRequired();
+      builder.Property(x => x.Wins).IsRequired();
+      builder.Property(x => x.Losses).IsRequired();
+
+      builder.HasIndex(x => x.UserId);
+    });
+
+    // =========================
+    // HERO MASTERY
+    // =========================
+    modelBuilder.Entity<UserHeroMastery>(builder =>
+    {
+      builder.Property(x => x.UserId).IsRequired();
+      builder.Property(x => x.HeroId).IsRequired();
+
+      builder.HasIndex(x => new { x.UserId, x.HeroId });
+    });
+
+    // =========================
+    // CLASS MASTERY
+    // =========================
+    modelBuilder.Entity<UserClassMastery>(builder =>
+    {
+      builder.Property(x => x.UserId).IsRequired();
+      builder.Property(x => x.HeroClassId).IsRequired();
+
+      builder.HasIndex(x => new { x.UserId, x.HeroClassId });
+    });
+
+    // =========================
+    // IDENTITY
+    // =========================
+    modelBuilder.Entity<UserIdentity>(builder =>
+    {
+      builder.Property(x => x.UserId).IsRequired();
+      builder.Property(x => x.Provider).IsRequired();
+      builder.Property(x => x.ExternalId).IsRequired();
+
+      builder.HasIndex(x => new { x.Provider, x.ExternalId })
+             .IsUnique();
+    });
+  }
+
+  // =========================
+  // DBSets
+  // =========================
+  public DbSet<User> Users => Set<User>();
+  public DbSet<UserRank> UserRanks => Set<UserRank>();
+  public DbSet<UserHeroMastery> UserHeroMasteries => Set<UserHeroMastery>();
+  public DbSet<UserClassMastery> UserClassMasteries => Set<UserClassMastery>();
+  public DbSet<UserIdentity> UserIdentities => Set<UserIdentity>();
 }
-
-
