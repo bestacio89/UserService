@@ -3,10 +3,10 @@
   <Import Project="../../../common.targets" />
 
   <ItemGroup>
-    <PackageReference Include="Franz.Common.Business"/>
-    <PackageReference Include="Franz.Common.Caching"/>
-    <PackageReference Include="Franz.Common.Mediator"/>
-    <PackageReference Include="Refit"/>
+    <PackageReference Include="Franz.Common.Business" />
+    <PackageReference Include="Franz.Common.Caching" />
+    <PackageReference Include="Franz.Common.Mediator" />
+    <PackageReference Include="Refit" />
   </ItemGroup>
 
   <ItemGroup>
