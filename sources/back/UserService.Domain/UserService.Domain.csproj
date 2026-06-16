@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<Import Project="../../../common.targets" />
 
 	<ItemGroup>
-	  <PackageReference Include="Franz.Common.Business"/>
+	  <PackageReference Include="Franz.Common.Business" />
 	
 	</ItemGroup>
 
