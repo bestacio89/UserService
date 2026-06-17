@@ -14,12 +14,23 @@ public sealed class UserProgressionLookupRepository : IUserProgressionLookupRepo
     _dbContext = dbContext;
   }
 
-  public Task<IQueryable<UserHeroMastery>> GetHeroMasteries(Guid userId, CancellationToken ct)
+  public async Task<IReadOnlyList<UserHeroMastery>> GetHeroMasteries(
+      Guid userId,
+      CancellationToken ct)
   {
-    return _dbContext.UserHeroMasteries
+    return await _dbContext.UserHeroMasteries
         .AsNoTracking()
         .Where(x => x.UserId == userId)
-        .ToListAsync(ct) ;
+        .ToListAsync(ct);
+  }
+  public async Task<IReadOnlyList<UserClassMastery>> GetClassMasteries(
+    Guid userId,
+    CancellationToken ct)
+  {
+    return await _dbContext.UserClassMasteries
+        .AsNoTracking()
+        .Where(x => x.UserId == userId)
+        .ToListAsync(ct);
   }
 
   public Task<UserHeroMastery?> GetHeroMastery(Guid userId, Guid heroId, CancellationToken ct)
