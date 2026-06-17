@@ -1,4 +1,5 @@
 ﻿using Franz.Common.Business.Domain;
+using UserService.Domain.Authentication;
 
 namespace UserService.Domain.Users;
 
@@ -81,4 +82,5 @@ public sealed class User : Entity<Guid>
 
     MarkUpdated("system");
   }
+
 }
