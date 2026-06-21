@@ -1,13 +1,13 @@
 ﻿using Franz.Common.Business.Repositories;
 using Franz.Common.EntityFramework;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UserService.Application.Commands.Authentication.Services;
+using UserService.Application.Validation;
 using UserService.Contracts.Commands.Authentication;
 using UserService.Contracts.DTOs.Authentication;
 using UserService.Contracts.Infrastructure.Authentication;
 using UserService.Contracts.Persistence;
+using UserService.Domain.Authentication;
+using UserService.Domain.Identity;
 using UserService.Domain.Users;
 
 namespace UserService.Application.Commands.Authentication;
@@ -19,49 +19,156 @@ public sealed class AuthenticationService : IAuthenticationService
   private readonly IEntityRepository<User, Guid> _userRepo;
   private readonly ILoginSessionService _sessionService;
   private readonly ITokenService _tokenService;
+  private readonly IUserAccessValidator _userAccessValidator;
   private readonly IUnitOfWork _uow;
 
-  public async Task<LoginResult> LoginAsync(LoginUserCommand cmd, CancellationToken ct)
+  public AuthenticationService(
+      IAuthenticationProviderFactory providerFactory,
+      IUserIdentityLookupRepository identityRepo,
+      IEntityRepository<User, Guid> userRepo,
+      ILoginSessionService sessionService,
+      ITokenService tokenService,
+      IUserAccessValidator userAccessValidator,
+      IUnitOfWork uow)
   {
-    // 1. External authentication
+    _providerFactory = providerFactory;
+    _identityRepo = identityRepo;
+    _userRepo = userRepo;
+    _sessionService = sessionService;
+    _tokenService = tokenService;
+    _userAccessValidator = userAccessValidator;
+    _uow = uow;
+  }
+
+  public async Task<LoginResult> LoginAsync(
+      LoginUserCommand cmd,
+      CancellationToken ct)
+  {
+    var external = await AuthenticateExternalAsync(cmd, ct);
+
+    var identity = await ResolveIdentityAsync(external, ct);
+
+    var user = await LoadUserAsync(identity, ct);
+
+    ValidateUserAccess(user, ct);
+
+    var session = CreateSession(user, cmd);
+
+    var tokens = GenerateTokens(user, session);
+
+    session.SetRefreshToken(tokens.RefreshToken);
+
+    await PersistAsync(session, ct);
+
+    return BuildResult(user, tokens);
+  }
+
+  // =========================================================
+  // STEP 1 — External authentication
+  // =========================================================
+
+  private async Task<ExternalIdentity> AuthenticateExternalAsync(
+      LoginUserCommand cmd,
+      CancellationToken ct)
+  {
     var provider = _providerFactory.Get(cmd.Provider);
 
-    var external = await provider.AuthenticateAsync(
+    return await provider.AuthenticateAsync(
         cmd.Identifier,
         cmd.Secret,
         ct);
+  }
 
-    // 2. Resolve identity
+  // =========================================================
+  // STEP 2 — Identity resolution
+  // =========================================================
+
+  private async Task<UserIdentity> ResolveIdentityAsync(
+      ExternalIdentity external,
+      CancellationToken ct)
+  {
     var identity = await _identityRepo.GetByProviderAsync(
         external.Provider,
         external.ProviderUserId,
         ct);
 
-    if (identity is null)
-      throw new UnauthorizedAccessException("Identity not linked");
+    return identity
+        ?? throw new UnauthorizedAccessException("Identity not linked");
+  }
 
-    // 3. Load user
-    var user = await _userRepo.GetByIdAsync(identity.UserId, ct)
-               ?? throw new InvalidOperationException("User not found");
+  // =========================================================
+  // STEP 3 — Load user aggregate
+  // =========================================================
 
-    // 4. Session (delegated)
-    var session = _sessionService.CreateSession(user, cmd.DeviceId);
+  private async Task<User> LoadUserAsync(
+      UserIdentity identity,
+      CancellationToken ct)
+  {
+    return await _userRepo.GetByIdAsync(identity.UserId, ct)
+           ?? throw new InvalidOperationException("User not found");
+  }
 
+  // =========================================================
+  // STEP 4 — Account access validation
+  // =========================================================
+
+  private void ValidateUserAccess(User user, CancellationToken cancellation)
+  {
+    _userAccessValidator.EnsureCanLoginAsync(user, cancellation);
+  }
+
+  // =========================================================
+  // STEP 5 — Session creation
+  // =========================================================
+
+  private UserSession CreateSession(
+      User user,
+      LoginUserCommand cmd)
+  {
+    return _sessionService.CreateSession(
+        user,
+        cmd.DeviceId);
+  }
+
+  // =========================================================
+  // STEP 6 — Token generation
+  // =========================================================
+
+  private (string AccessToken, string RefreshToken) GenerateTokens(
+      User user,
+      UserSession session)
+  {
+    return (
+        _tokenService.CreateAccessToken(user, session),
+        _tokenService.CreateRefreshToken(user, session)
+    );
+  }
+
+  // =========================================================
+  // STEP 7 — Persistence
+  // =========================================================
+
+  private async Task PersistAsync(
+      UserSession session,
+      CancellationToken ct)
+  {
     await _sessionService.PersistAsync(session, ct);
 
-    // 5. Tokens
-    var accessToken = _tokenService.CreateAccessToken(user, session);
-    var refreshToken = _tokenService.CreateRefreshToken(user, session);
-
-    session.SetRefreshToken(refreshToken);
-
-    // 6. Commit
     await _uow.CommitAsync(ct);
+  }
 
+  // =========================================================
+  // RESULT
+  // =========================================================
+
+  private static LoginResult BuildResult(
+      User user,
+      (string AccessToken, string RefreshToken) tokens)
+  {
     return new LoginResult(
         user.Id,
-        accessToken,
-        refreshToken,
+        tokens.AccessToken,
+        tokens.RefreshToken,
         DateTime.UtcNow.AddMinutes(15));
   }
 }
