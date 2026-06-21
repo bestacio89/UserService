@@ -6,6 +6,7 @@
     <PackageReference Include="Franz.Common.Business" />
     <PackageReference Include="Franz.Common.Caching" />
     <PackageReference Include="Franz.Common.Mediator" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" />
     <PackageReference Include="Refit" />
   </ItemGroup>
 
