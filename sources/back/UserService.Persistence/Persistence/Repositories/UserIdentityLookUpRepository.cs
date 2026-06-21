@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using UserService.Application.ReadModels.Authentication;
 using UserService.Contracts.Persistence;
 using UserService.Domain.Identity;
 using UserService.Domain.Users;
@@ -16,7 +15,7 @@ public sealed class UserIdentityLookupRepository : IUserIdentityLookupRepository
   }
 
   public async Task<UserIdentity?> GetByProviderAsync(
-      string provider,
+      IdentityProvider provider,
       string providerUserId,
       CancellationToken ct)
   {
@@ -24,7 +23,7 @@ public sealed class UserIdentityLookupRepository : IUserIdentityLookupRepository
         .AsNoTracking()
         .FirstOrDefaultAsync(x =>
             x.Provider == provider &&
-            x.ProviderUserId == providerUserId,
+            x.ExternalId == providerUserId,
             ct);
   }
 }

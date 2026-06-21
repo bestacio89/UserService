@@ -9,7 +9,7 @@ namespace UserService.Contracts.Persistence;
 public interface IUserIdentityLookupRepository : IScopedDependency
 {
   Task<UserIdentity?> GetByProviderAsync(
-      string provider,
-      string providerUserId,
-      CancellationToken ct);
+       IdentityProvider provider,
+       string providerUserId,
+       CancellationToken ct);
 }
