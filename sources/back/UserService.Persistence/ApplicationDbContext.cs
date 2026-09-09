@@ -7,6 +7,7 @@ using UserService.Domain.Users;
 using UserService.Domain.Ranked;
 using UserService.Domain.Progression;
 using UserService.Domain.Identity;
+using UserService.Domain.Wallet;
 
 namespace UserService.Persistence;
 
@@ -77,6 +78,34 @@ public class ApplicationDbContext : DbContextBase
     });
 
     // =========================
+    // CURRENCY (catalog)
+    // =========================
+    modelBuilder.Entity<Currency>(builder =>
+    {
+      builder.Property(x => x.Code).IsRequired().HasMaxLength(30);
+      builder.Property(x => x.DisplayName).IsRequired().HasMaxLength(100);
+      builder.Property(x => x.IsPremium).IsRequired();
+      builder.Property(x => x.IsActive).IsRequired();
+
+      builder.HasIndex(x => x.Code).IsUnique();
+    });
+
+    // =========================
+    // WALLET (per-currency balance, one row per (UserId, CurrencyId) —
+    // same shape as UserHeroMastery/UserClassMastery above)
+    // =========================
+    modelBuilder.Entity<UserWalletBalance>(builder =>
+    {
+      builder.Property(x => x.UserId).IsRequired();
+      builder.Property(x => x.CurrencyId).IsRequired();
+      builder.Property(x => x.CurrencyCode).IsRequired().HasMaxLength(30);
+      builder.Property(x => x.CurrencyDisplayName).IsRequired().HasMaxLength(100);
+      builder.Property(x => x.Amount).IsRequired();
+
+      builder.HasIndex(x => new { x.UserId, x.CurrencyId }).IsUnique();
+    });
+
+    // =========================
     // IDENTITY
     // =========================
     modelBuilder.Entity<UserIdentity>(builder =>
@@ -98,4 +127,6 @@ public class ApplicationDbContext : DbContextBase
   public DbSet<UserHeroMastery> UserHeroMasteries => Set<UserHeroMastery>();
   public DbSet<UserClassMastery> UserClassMasteries => Set<UserClassMastery>();
   public DbSet<UserIdentity> UserIdentities => Set<UserIdentity>();
+  public DbSet<Currency> Currencies => Set<Currency>();
+  public DbSet<UserWalletBalance> UserWalletBalances => Set<UserWalletBalance>();
 }
