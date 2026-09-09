@@ -3,14 +3,33 @@
   <Import Project="../../../common.targets" />
 
   <ItemGroup>
+    <Compile Remove="Configurations\**" />
+    <Compile Remove="Depots\**" />
+    <Compile Remove="Migrations\**" />
+    <Compile Remove="Semoirs\**" />
+    <EmbeddedResource Remove="Configurations\**" />
+    <EmbeddedResource Remove="Depots\**" />
+    <EmbeddedResource Remove="Migrations\**" />
+    <EmbeddedResource Remove="Semoirs\**" />
+    <None Remove="Configurations\**" />
+    <None Remove="Depots\**" />
+    <None Remove="Migrations\**" />
+    <None Remove="Semoirs\**" />
+    <PackageVersion Remove="Configurations\**" />
+    <PackageVersion Remove="Depots\**" />
+    <PackageVersion Remove="Migrations\**" />
+    <PackageVersion Remove="Semoirs\**" />
+  </ItemGroup>
+
+  <ItemGroup>
 	 
-	  <PackageReference Include="Franz.Common.Caching"/>
+	  <PackageReference Include="Franz.Common.Caching" />
 	 
-	  <PackageReference Include="Franz.Common.EntityFramework"/>
+	  <PackageReference Include="Franz.Common.EntityFramework" />
 	 
-	  <PackageReference Include="Franz.Common.EntityFramework.PostGres"/>
+	  <PackageReference Include="Franz.Common.EntityFramework.PostGres" />
 	 
-	  <PackageReference Include="Franz.Common.Hosting"/>
+	  <PackageReference Include="Franz.Common.Hosting" />
 	 
 	  
 	  
@@ -18,14 +37,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Configurations\" />
-    <Folder Include="Depots\" />
-    <Folder Include="Migrations\" />
-    <Folder Include="Persistence\Seeders\NewFolder\" />
-    <Folder Include="Semoirs\" />
   </ItemGroup>
 
   <ItemGroup>
