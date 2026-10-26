@@ -48,11 +48,13 @@ namespace UserService.Testing.ArchitecturalReports.Layers
             .And().HaveNameEndingWith("Controller")
             .Should().OnlyDependOnTypesThat()
             .ResideInNamespaceMatching($"^{prefix}\\.Contracts(\\..*)?$")
+            .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Application(\\..*)?$")
             .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common(\\..*)?$")
+            .OrShould().ResideInNamespaceMatching(@"^Franz\.Common(\..*)?$")
             .OrShould().ResideInNamespaceMatching(@"^System(\..*)?$")
             .OrShould().ResideInNamespaceMatching(@"^Microsoft(\..*)?$")
             .OrShould().ResideInNamespaceMatching($"^{prefix}\\.API(\\..*)?$")
-            .Because("Controllers are entry points; they must not touch Domain, Application, or Persistence layers directly.");
+            .Because("Controllers may depend on application services and contracts, but must not bypass them into Domain or Persistence.");
 
         ExecuteRule("Dependency Isolation", "Controllers must not bypass the Application layer.",
             isolationRule, sb, markViolation);
