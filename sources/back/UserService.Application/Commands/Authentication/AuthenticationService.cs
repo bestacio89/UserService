@@ -82,9 +82,17 @@ public sealed class AuthenticationService : IAuthenticationService
     if (!session.MatchesRefreshTokenHash(suppliedHash))
     {
       // A validly signed but superseded refresh token is a replay attempt.
-      session.Revoke();
-      await _sessionService.UpdateAsync(session, ct);
-      await _uow.CommitAsync(ct);
+      try
+      {
+        session.Revoke();
+        await _sessionService.UpdateAsync(session, ct);
+        await _uow.CommitAsync(ct);
+      }
+      catch (DbUpdateConcurrencyException)
+      {
+        // A concurrent rotation already changed the session; the presented token is stale.
+      }
+
       throw new UnauthorizedAccessException("Invalid refresh token.");
     }
 
@@ -121,10 +129,12 @@ public sealed class AuthenticationService : IAuthenticationService
 
     var principal = _tokenService.ValidateRefreshToken(refreshToken, validateLifetime: false);
     var sessionId = ReadGuidClaim(principal, "sid");
+    var userId = ReadGuidClaim(principal, "uid");
     var session = await _sessionService.GetByIdAsync(sessionId, ct)
         ?? throw new UnauthorizedAccessException("Invalid refresh token.");
 
-    if (!session.MatchesRefreshTokenHash(_tokenService.HashRefreshToken(refreshToken)))
+    if (session.UserId != userId
+        || !session.MatchesRefreshTokenHash(_tokenService.HashRefreshToken(refreshToken)))
       throw new UnauthorizedAccessException("Invalid refresh token.");
 
     session.Revoke();
