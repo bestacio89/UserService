@@ -1,28 +1,23 @@
-﻿using UserService.Domain.Users;
+using UserService.Domain.Users;
 
 namespace UserService.Application.Validation;
 
 public sealed class UserAccessValidator : IUserAccessValidator
 {
-  public Task EnsureCanLoginAsync(
-      User user,
-      CancellationToken cancellationToken)
+  public Task EnsureCanLoginAsync(User user, CancellationToken cancellationToken)
   {
+    cancellationToken.ThrowIfCancellationRequested();
     EnsureAllowed(user);
     return Task.CompletedTask;
   }
 
-  public Task EnsureCanPlayAsync(
-      User user,
-      CancellationToken cancellationToken)
+  public Task EnsureCanPlayAsync(User user, CancellationToken cancellationToken)
   {
+    cancellationToken.ThrowIfCancellationRequested();
     EnsureAllowed(user);
     return Task.CompletedTask;
   }
 
-  // =========================================================
-  // CORE RULE ENGINE
-  // =========================================================
   private static void EnsureAllowed(User user)
   {
     ArgumentNullException.ThrowIfNull(user);
@@ -31,39 +26,12 @@ public sealed class UserAccessValidator : IUserAccessValidator
     {
       case UserAccountState.Active:
         return;
-
       case UserAccountState.Suspended:
-        ThrowSuspended(user);
-        break;
-
+        throw new UnauthorizedAccessException("Account is suspended.");
       case UserAccountState.Banned:
-        ThrowBanned(user);
-        break;
-
+        throw new UnauthorizedAccessException("Account is banned.");
       default:
-        throw new InvalidOperationException(
-            $"Unsupported account state '{user.State}'.");
+        throw new InvalidOperationException($"Unsupported account state '{user.State}'.");
     }
-  }
-
-  // =========================================================
-  // EXCEPTIONS
-  // =========================================================
-  private static void ThrowSuspended(User user)
-  {
-    if (user.SuspendedUntil.HasValue)
-    {
-      throw new UnauthorizedAccessException(
-          $"Account suspended until {user.SuspendedUntil.Value:u}. Reason: {user.StatusReason}");
-    }
-
-    throw new UnauthorizedAccessException(
-        $"Account suspended. Reason: {user.StatusReason}");
-  }
-
-  private static void ThrowBanned(User user)
-  {
-    throw new UnauthorizedAccessException(
-        $"Account banned. Reason: {user.StatusReason}");
   }
 }
