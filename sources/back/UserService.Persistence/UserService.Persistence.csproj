@@ -22,18 +22,15 @@
   </ItemGroup>
 
   <ItemGroup>
-	 
-	  <PackageReference Include="Franz.Common.Caching" />
-	 
-	  <PackageReference Include="Franz.Common.EntityFramework" />
-	 
-	  <PackageReference Include="Franz.Common.EntityFramework.PostGres" />
-	 
-	  <PackageReference Include="Franz.Common.Hosting" />
-	 
-	  
-	  
+    <PackageReference Include="Franz.Common.Caching" />
+    <PackageReference Include="Franz.Common.EntityFramework" />
+    <PackageReference Include="Franz.Common.EntityFramework.PostGres" />
+    <PackageReference Include="Franz.Common.Hosting" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -45,5 +42,3 @@
   </ItemGroup>
 
 </Project>
-
-
