@@ -45,10 +45,6 @@ public sealed class AuthController : ControllerBase
     {
       return StatusCode(StatusCodes.Status403Forbidden);
     }
-    catch (AccountAccessDeniedException)
-    {
-      return StatusCode(StatusCodes.Status403Forbidden);
-    }
     catch (UnauthorizedAccessException)
     {
       return Unauthorized();
@@ -64,6 +60,10 @@ public sealed class AuthController : ControllerBase
     {
       var result = await _authService.RefreshAsync(request.RefreshToken, ct);
       return Ok(ToResponse(result));
+    }
+    catch (AccountAccessDeniedException)
+    {
+      return StatusCode(StatusCodes.Status403Forbidden);
     }
     catch (UnauthorizedAccessException)
     {
