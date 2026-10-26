@@ -80,7 +80,7 @@ public sealed class TokenServiceTests
           new Claim("typ", tokenType),
           new Claim("jti", Guid.NewGuid().ToString())
         ],
-        notBefore: DateTime.UtcNow.AddMinutes(-1),
+        notBefore: expiresAt.AddMinutes(-10),
         expires: expiresAt,
         signingCredentials: credentials);
 
