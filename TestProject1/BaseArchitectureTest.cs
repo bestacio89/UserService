@@ -31,7 +31,7 @@ namespace UserService.Testing
 
       // Include Franz.Common and Franz.Common.Mediator
       const string allowedPattern =
-        @".*\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts)(\.dll)?$";
+        @".*(Franz\.Common(\..*)?|FranzTesting|\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts))(\.dll)?$";
 
       EnsureAssembliesLoaded(allowedPattern);
 
@@ -40,7 +40,7 @@ namespace UserService.Testing
         .GetAssemblies()
         .Where(a => Regex.IsMatch(
             a.GetName().Name,
-            @"\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts)$",
+            @"^(Franz\.Common(\..*)?|FranzTesting|.*\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts))$",
             RegexOptions.IgnoreCase))
         .Distinct()
         .ToArray();
