@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 using Franz.Common.Business.Repositories;
 using Franz.Common.EntityFramework;
 using Franz.Common.Mediator.Pipelines.Core;
@@ -74,11 +75,21 @@ public sealed class AuthenticationService : IAuthenticationService
     var session = await _sessionService.GetByIdAsync(sessionId, ct)
         ?? throw new UnauthorizedAccessException("Invalid refresh token.");
 
-    if (session.UserId != userId
-        || !session.CanRefresh(_tokenService.HashRefreshToken(refreshToken), DateTime.UtcNow))
+    if (session.UserId != userId || session.IsRevoked)
+      throw new UnauthorizedAccessException("Invalid refresh token.");
+
+    var suppliedHash = _tokenService.HashRefreshToken(refreshToken);
+    if (!session.MatchesRefreshTokenHash(suppliedHash))
     {
+      // A validly signed but superseded refresh token is a replay attempt.
+      session.Revoke();
+      await _sessionService.UpdateAsync(session, ct);
+      await _uow.CommitAsync(ct);
       throw new UnauthorizedAccessException("Invalid refresh token.");
     }
+
+    if (!session.CanRefresh(suppliedHash, DateTime.UtcNow))
+      throw new UnauthorizedAccessException("Invalid refresh token.");
 
     var user = await _userRepo.GetByIdAsync(userId, ct)
         ?? throw new UnauthorizedAccessException("Account is unavailable.");
@@ -90,8 +101,16 @@ public sealed class AuthenticationService : IAuthenticationService
         _tokenService.HashRefreshToken(newRefreshToken),
         _tokenService.GetRefreshTokenExpiry());
 
-    await _sessionService.UpdateAsync(session, ct);
-    await _uow.CommitAsync(ct);
+    try
+    {
+      await _sessionService.UpdateAsync(session, ct);
+      await _uow.CommitAsync(ct);
+    }
+    catch (DbUpdateConcurrencyException)
+    {
+      // Another refresh rotated this session first; never return a competing token pair.
+      throw new UnauthorizedAccessException("Invalid refresh token.");
+    }
 
     return new LoginResult(user.Id, newAccessToken, newRefreshToken, _tokenService.GetAccessTokenExpiry());
   }
