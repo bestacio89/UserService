@@ -1,4 +1,5 @@
-﻿using Franz.Common.Business.Repositories;
+using System.Security.Claims;
+using Franz.Common.Business.Repositories;
 using Franz.Common.EntityFramework;
 using Franz.Common.Mediator.Pipelines.Core;
 using UserService.Application.Commands.Authentication.Services;
@@ -41,135 +42,95 @@ public sealed class AuthenticationService : IAuthenticationService
     _uow = uow;
   }
 
-  public async Task<LoginResult> LoginAsync(
-      LoginUserCommand cmd,
-      CancellationToken ct)
+  public async Task<LoginResult> LoginAsync(LoginUserCommand cmd, CancellationToken ct)
   {
+    ct.ThrowIfCancellationRequested();
+
     var external = await AuthenticateExternalAsync(cmd, ct);
-
     var identity = await ResolveIdentityAsync(external, ct);
-
     var user = await LoadUserAsync(identity, ct);
+    await _userAccessValidator.EnsureCanLoginAsync(user, ct);
 
-    ValidateUserAccess(user, ct);
+    var session = _sessionService.CreateSession(user, cmd.DeviceId);
+    var accessToken = _tokenService.CreateAccessToken(user, session);
+    var refreshToken = _tokenService.CreateRefreshToken(user, session);
+    session.SetRefreshTokenHash(
+        _tokenService.HashRefreshToken(refreshToken),
+        _tokenService.GetRefreshTokenExpiry());
 
-    var session = CreateSession(user, cmd);
-
-    var tokens = GenerateTokens(user, session);
-
-    session.SetRefreshToken(tokens.RefreshToken);
-
-    await PersistAsync(session, ct);
-
-    return BuildResult(user, tokens);
-  }
-
-  // =========================================================
-  // STEP 1 — External authentication
-  // =========================================================
-
-  private async Task<ExternalIdentity> AuthenticateExternalAsync(
-      LoginUserCommand cmd,
-      CancellationToken ct)
-  {
-    var provider = _providerFactory.Get(cmd.Provider);
-
-    return await provider.AuthenticateAsync(
-        cmd.Identifier,
-        cmd.Secret,
-        ct);
-  }
-
-  // =========================================================
-  // STEP 2 — Identity resolution
-  // =========================================================
-
-  private async Task<UserIdentity> ResolveIdentityAsync(
-      ExternalIdentity external,
-      CancellationToken ct)
-  {
-    var identity = await _identityRepo.GetByProviderAsync(
-        external.Provider,
-        external.ProviderUserId,
-        ct);
-
-    return identity
-        ?? throw new UnauthorizedAccessException("Identity not linked");
-  }
-
-  // =========================================================
-  // STEP 3 — Load user aggregate
-  // =========================================================
-
-  private async Task<User> LoadUserAsync(
-      UserIdentity identity,
-      CancellationToken ct)
-  {
-    return await _userRepo.GetByIdAsync(identity.UserId, ct)
-           ?? throw new InvalidOperationException("User not found");
-  }
-
-  // =========================================================
-  // STEP 4 — Account access validation
-  // =========================================================
-
-  private void ValidateUserAccess(User user, CancellationToken cancellation)
-  {
-    _userAccessValidator.EnsureCanLoginAsync(user, cancellation);
-  }
-
-  // =========================================================
-  // STEP 5 — Session creation
-  // =========================================================
-
-  private UserSession CreateSession(
-      User user,
-      LoginUserCommand cmd)
-  {
-    return _sessionService.CreateSession(
-        user,
-        cmd.DeviceId);
-  }
-
-  // =========================================================
-  // STEP 6 — Token generation
-  // =========================================================
-
-  private (string AccessToken, string RefreshToken) GenerateTokens(
-      User user,
-      UserSession session)
-  {
-    return (
-        _tokenService.CreateAccessToken(user, session),
-        _tokenService.CreateRefreshToken(user, session)
-    );
-  }
-
-  // =========================================================
-  // STEP 7 — Persistence
-  // =========================================================
-
-  private async Task PersistAsync(
-      UserSession session,
-      CancellationToken ct)
-  {
     await _sessionService.PersistAsync(session, ct);
+    await _uow.CommitAsync(ct);
 
+    return new LoginResult(user.Id, accessToken, refreshToken, _tokenService.GetAccessTokenExpiry());
+  }
+
+  public async Task<LoginResult> RefreshAsync(string refreshToken, CancellationToken ct)
+  {
+    ct.ThrowIfCancellationRequested();
+
+    var principal = _tokenService.ValidateRefreshToken(refreshToken);
+    var userId = ReadGuidClaim(principal, "uid");
+    var sessionId = ReadGuidClaim(principal, "sid");
+    var session = await _sessionService.GetByIdAsync(sessionId, ct)
+        ?? throw new UnauthorizedAccessException("Invalid refresh token.");
+
+    if (session.UserId != userId
+        || !session.CanRefresh(_tokenService.HashRefreshToken(refreshToken), DateTime.UtcNow))
+    {
+      throw new UnauthorizedAccessException("Invalid refresh token.");
+    }
+
+    var user = await _userRepo.GetByIdAsync(userId, ct)
+        ?? throw new UnauthorizedAccessException("Account is unavailable.");
+    await _userAccessValidator.EnsureCanLoginAsync(user, ct);
+
+    var newAccessToken = _tokenService.CreateAccessToken(user, session);
+    var newRefreshToken = _tokenService.CreateRefreshToken(user, session);
+    session.RotateRefreshTokenHash(
+        _tokenService.HashRefreshToken(newRefreshToken),
+        _tokenService.GetRefreshTokenExpiry());
+
+    await _sessionService.UpdateAsync(session, ct);
+    await _uow.CommitAsync(ct);
+
+    return new LoginResult(user.Id, newAccessToken, newRefreshToken, _tokenService.GetAccessTokenExpiry());
+  }
+
+  public async Task LogoutAsync(string refreshToken, CancellationToken ct)
+  {
+    ct.ThrowIfCancellationRequested();
+
+    var principal = _tokenService.ValidateRefreshToken(refreshToken, validateLifetime: false);
+    var sessionId = ReadGuidClaim(principal, "sid");
+    var session = await _sessionService.GetByIdAsync(sessionId, ct)
+        ?? throw new UnauthorizedAccessException("Invalid refresh token.");
+
+    if (!session.MatchesRefreshTokenHash(_tokenService.HashRefreshToken(refreshToken)))
+      throw new UnauthorizedAccessException("Invalid refresh token.");
+
+    session.Revoke();
+    await _sessionService.UpdateAsync(session, ct);
     await _uow.CommitAsync(ct);
   }
 
-  // =========================================================
-  // RESULT
-  // =========================================================
-
-  private static LoginResult BuildResult(
-      User user,
-      (string AccessToken, string RefreshToken) tokens)
+  private async Task<ExternalIdentity> AuthenticateExternalAsync(LoginUserCommand cmd, CancellationToken ct)
   {
-    return new LoginResult(
-        user.Id,
-        tokens.AccessToken,
-        tokens.RefreshToken,
-        DateTime.UtcNow.AddMinutes(15));
+    var provider = _providerFactory.Get(cmd.Provider);
+    return await provider.AuthenticateAsync(cmd.Identifier, cmd.Secret, ct);
   }
+
+  private async Task<UserIdentity> ResolveIdentityAsync(ExternalIdentity external, CancellationToken ct)
+  {
+    var identity = await _identityRepo.GetByProviderAsync(external.Provider, external.ProviderUserId, ct);
+    return identity ?? throw new UnauthorizedAccessException("Identity not linked.");
+  }
+
+  private async Task<User> LoadUserAsync(UserIdentity identity, CancellationToken ct)
+      => await _userRepo.GetByIdAsync(identity.UserId, ct)
+          ?? throw new UnauthorizedAccessException("Account is unavailable.");
+
+  private static Guid ReadGuidClaim(ClaimsPrincipal principal, string claimType)
+      => Guid.TryParse(principal.FindFirst(claimType)?.Value, out var value) && value != Guid.Empty
+          ? value
+          : throw new UnauthorizedAccessException("Invalid refresh token.");
 }
