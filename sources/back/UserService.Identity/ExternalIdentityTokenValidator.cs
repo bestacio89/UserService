@@ -33,7 +33,8 @@ public sealed class ExternalIdentityTokenValidator
       string token,
       CancellationToken cancellationToken)
   {
-    if (string.IsNullOrWhiteSpace(token))
+    var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
+    if (string.IsNullOrWhiteSpace(token) || !handler.CanReadToken(token))
       throw new UnauthorizedAccessException("Invalid external identity token.");
 
     var (metadataAddress, issuers, audienceKeys) = GetProviderSettings(provider);
@@ -70,11 +71,6 @@ public sealed class ExternalIdentityTokenValidator
       RequireExpirationTime = true,
       ClockSkew = TimeSpan.FromMinutes(2),
       ValidAlgorithms = [SecurityAlgorithms.RsaSha256]
-    };
-
-    var handler = new JwtSecurityTokenHandler
-    {
-      MapInboundClaims = false
     };
 
     try
