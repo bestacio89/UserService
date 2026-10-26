@@ -71,7 +71,7 @@ namespace UserService.Testing.ArchitecturalReports.Layers
             .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Contracts(\\..*)?$")
             .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Domain(\\..*)?$")
             .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Application(\\..*)?$") // Can depend on its own types!
-            .OrShould().ResideInNamespaceMatching(@"^Franz\\.Common(\\..*)?$")
+            .OrShould().ResideInNamespaceMatching(@"^Franz\.Common(\..*)?$")
 
             // ðŸ—ï¸ The "Plumbing" Permission (Required for LINQ, Tasks, and Mappings)
             .OrShould().ResideInNamespaceMatching(@"^System(\..*)?$")
