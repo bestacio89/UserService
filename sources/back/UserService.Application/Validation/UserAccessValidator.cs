@@ -2,6 +2,8 @@ using UserService.Domain.Users;
 
 namespace UserService.Application.Validation;
 
+public sealed class AccountAccessDeniedException(string message) : Exception(message);
+
 public sealed class UserAccessValidator : IUserAccessValidator
 {
   public Task EnsureCanLoginAsync(User user, CancellationToken cancellationToken)
@@ -27,9 +29,9 @@ public sealed class UserAccessValidator : IUserAccessValidator
       case UserAccountState.Active:
         return;
       case UserAccountState.Suspended:
-        throw new UnauthorizedAccessException("Account is suspended.");
+        throw new AccountAccessDeniedException("Account is suspended.");
       case UserAccountState.Banned:
-        throw new UnauthorizedAccessException("Account is banned.");
+        throw new AccountAccessDeniedException("Account is banned.");
       default:
         throw new InvalidOperationException($"Unsupported account state '{user.State}'.");
     }
