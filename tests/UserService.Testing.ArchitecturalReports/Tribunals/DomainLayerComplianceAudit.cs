@@ -179,6 +179,7 @@ namespace UserService.Testing.ArchitecturalReports.Layers
               .ResideInNamespaceMatching($"^{prefix}\\.Common\\.Business\\.Domain(\\..*)?$")
               .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common\\.Mediator(\\..*)?$")
               .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common(\\..*)?$")
+              .OrShould().ResideInNamespaceMatching(@"^Franz\\.Common(\\..*)?$")
               .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Domain(\\..*)?$")
               .OrShould().ResideInNamespaceMatching(@"^System(\..*)?$")
               .Because("The Domain layer must remain pure â€” it may depend only on its own layer, Common abstractions, and System libraries.")
