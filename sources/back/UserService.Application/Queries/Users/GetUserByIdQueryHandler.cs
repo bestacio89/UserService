@@ -1,7 +1,7 @@
 ﻿using Franz.Common.Business.Repositories;
 using Franz.Common.Mapping.Abstractions;
 using Franz.Common.Mediator.Handlers;
-using UserService.Application.ReadModels.Users;
+using UserService.Contracts.Persistence;
 using UserService.Contracts.DTOs.Users;
 using UserService.Contracts.Queries.Users;
 using UserService.Domain.Users;
