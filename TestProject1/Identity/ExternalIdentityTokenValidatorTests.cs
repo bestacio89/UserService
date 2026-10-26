@@ -19,7 +19,7 @@ public sealed class ExternalIdentityTokenValidatorTests
   public async Task ValidateAsync_FailsClosedWhenClientAudienceIsNotConfigured()
   {
     var validator = new ExternalIdentityTokenValidator(new ConfigurationBuilder().Build());
-    const string syntacticallyReadableToken = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.signature";
+    const string syntacticallyReadableToken = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.c2lnbmF0dXJl";
 
     await Assert.ThrowsAsync<InvalidOperationException>(
         () => validator.ValidateAsync(
@@ -36,7 +36,7 @@ public sealed class ExternalIdentityTokenValidatorTests
     await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
         () => validator.ValidateAsync(
             IdentityProvider.Guest,
-            "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.signature",
+            "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.c2lnbmF0dXJl",
             CancellationToken.None));
   }
 }
