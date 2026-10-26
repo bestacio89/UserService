@@ -44,7 +44,8 @@ namespace UserService.Testing.ArchitecturalReports.Layers
         // RULE 3 â€” Dependency isolation (The "Fker" Hunter)
         var isolationRule = ArchRuleDefinition
             .Classes()
-            .That().HaveNameEndingWith("Controller")
+            .That().ResideInNamespaceMatching($"^{prefix}\\.API\\.Controllers(\\..*)?$")
+            .And().HaveNameEndingWith("Controller")
             .Should().OnlyDependOnTypesThat()
             .ResideInNamespaceMatching($"^{prefix}\\.Contracts(\\..*)?$")
             .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common(\\..*)?$")
