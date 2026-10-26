@@ -126,9 +126,14 @@ public sealed class TokenService : ITokenService
   private static TimeSpan ReadPositiveLifetime(string? configured, int fallback, TimeSpan maximum, string name)
   {
     if (configured is null)
-      return TimeSpan.FromMinutes(fallback).CompareTo(maximum) <= 0
-          ? TimeSpan.FromMinutes(fallback)
+    {
+      var defaultLifetime = name.StartsWith("refresh", StringComparison.Ordinal)
+          ? TimeSpan.FromDays(fallback)
+          : TimeSpan.FromMinutes(fallback);
+      return defaultLifetime <= maximum
+          ? defaultLifetime
           : maximum;
+    }
 
     if (!int.TryParse(configured, out var value) || value <= 0)
       throw new InvalidOperationException($"The configured {name} must be a positive integer.");
