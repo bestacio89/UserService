@@ -14,12 +14,24 @@ public sealed class ExternalIdentityTokenValidator
   private const string GoogleIssuer = "https://accounts.google.com";
   private const string AppleIssuer = "https://appleid.apple.com";
 
-  private static readonly ConcurrentDictionary<string, ConfigurationManager<OpenIdConnectConfiguration>>
-      ConfigurationManagers = new(StringComparer.Ordinal);
-
   private readonly IConfiguration _configuration;
+  private readonly Func<string, IConfigurationManager<OpenIdConnectConfiguration>> _configurationManagerFactory;
+  private readonly ConcurrentDictionary<string, IConfigurationManager<OpenIdConnectConfiguration>>
+      _configurationManagers = new(StringComparer.Ordinal);
 
-  public ExternalIdentityTokenValidator(IConfiguration configuration) => _configuration = configuration;
+  public ExternalIdentityTokenValidator(IConfiguration configuration)
+      : this(configuration, CreateConfigurationManager)
+  {
+  }
+
+  public ExternalIdentityTokenValidator(
+      IConfiguration configuration,
+      Func<string, IConfigurationManager<OpenIdConnectConfiguration>> configurationManagerFactory)
+  {
+    _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    _configurationManagerFactory = configurationManagerFactory
+        ?? throw new ArgumentNullException(nameof(configurationManagerFactory));
+  }
 
   public async Task<ClaimsPrincipal> ValidateAsync(
       IdentityProvider provider, string token, CancellationToken cancellationToken)
@@ -40,12 +52,7 @@ public sealed class ExternalIdentityTokenValidator
     if (validAudiences.Length == 0)
       throw new InvalidOperationException($"No client audience is configured for external provider '{provider}'.");
 
-    var manager = ConfigurationManagers.GetOrAdd(
-        metadataAddress,
-        address => new ConfigurationManager<OpenIdConnectConfiguration>(
-            address, new OpenIdConnectConfigurationRetriever(),
-            new HttpDocumentRetriever { RequireHttps = true }));
-
+    var manager = _configurationManagers.GetOrAdd(metadataAddress, _configurationManagerFactory);
     var oidcConfiguration = await manager.GetConfigurationAsync(cancellationToken);
     var validationParameters = new TokenValidationParameters
     {
@@ -85,6 +92,12 @@ public sealed class ExternalIdentityTokenValidator
       throw new UnauthorizedAccessException("Invalid external identity token.");
     }
   }
+
+  private static IConfigurationManager<OpenIdConnectConfiguration> CreateConfigurationManager(string address)
+      => new ConfigurationManager<OpenIdConnectConfiguration>(
+          address,
+          new OpenIdConnectConfigurationRetriever(),
+          new HttpDocumentRetriever { RequireHttps = true });
 
   private static (string MetadataAddress, string[] Issuers, string[] AudienceKeys)
       GetProviderSettings(IdentityProvider provider)
