@@ -2,7 +2,7 @@ using Franz.Common.DependencyInjection;
 using UserService.Contracts.DTOs.Users;
 using UserService.Domain.Users;
 
-namespace UserService.Application.ReadModels.Users;
+namespace UserService.Contracts.Persistence;
 
 public interface IUserLookupRepository : IScopedDependency
 {
