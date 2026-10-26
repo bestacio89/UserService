@@ -24,7 +24,7 @@ public sealed class AuthController : ControllerBase
       CancellationToken ct)
   {
     if (!Enum.TryParse<IdentityProvider>(request.Provider, ignoreCase: true, out var provider)
-        || !Enum.IsDefined(provider))
+        || (provider != IdentityProvider.Google && provider != IdentityProvider.Apple))
     {
       return BadRequest("Unsupported identity provider.");
     }
