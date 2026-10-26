@@ -61,8 +61,6 @@ namespace UserService.Testing.ArchitecturalReports.Layers
               .Are(domainEntities)
               .Should()
               .BeAssignableTo(typeof(Entity<>))
-              .OrShould()
-              .BeAssignableTo(typeof(IEntity))
               .Because("All domain entities must inherit Entity or Entity<TId> for consistent identity and lifecycle management.")
               .Check(BaseArchitecture);
 
