@@ -1,5 +1,5 @@
 ﻿using Franz.Common.Mediator.Handlers;
-using UserService.Application.ReadModels.Ranked;
+using UserService.Contracts.Persistence;
 using UserService.Contracts.DTOs.Ranked;
 using UserService.Contracts.Queries.Ranked;
 
