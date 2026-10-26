@@ -178,7 +178,7 @@ namespace UserService.Testing.ArchitectureTests
       }
 
       ArchRuleDefinition
-          .Classes()
+          .Interfaces()
           .That()
           .Are(customRepositories)
           .Should()
