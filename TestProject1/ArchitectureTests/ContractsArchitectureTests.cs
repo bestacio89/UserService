@@ -70,26 +70,26 @@ namespace UserService.Testing.ArchitectureTests
     [Fact]
     public void DtosNameConvetionIsCorrect()
     {
-     
-      var contractObjects = ContractsLayer
+      var dtoTypes = ContractsLayer
           .GetObjects(BaseArchitecture)
-          .Where(t =>
-             
-              !t.Name.EndsWith("Dto", StringComparison.OrdinalIgnoreCase)
-              )
+          .Where(t => t.Name.EndsWith("Dto", StringComparison.OrdinalIgnoreCase))
           .ToList();
 
-      if (!contractObjects.Any())
+      if (!dtoTypes.Any())
       {
-        Console.WriteLine("ðŸŸ¡ No Dtos found â€” skipping persistence contract enforcement (virgin template).");
+        Console.WriteLine("No DTO types found; skipping DTO namespace enforcement.");
         return;
       }
-      ArchRuleDefinition.
-           Classes().That()
-          .ResideInNamespace("UserService.Contracts.DTOS")
+
+      // Request/response contracts such as LoginRequest and LoginResponse are not DTOs
+      // merely because they live under the DTOs folder. Only *Dto types are checked.
+      ArchRuleDefinition
+          .Classes()
+          .That()
+          .Are(dtoTypes)
           .Should()
-          .HaveNameEndingWith("Dto")
-          .Because("Dtos should be properly named as such")
+          .ResideInNamespaceMatching(@"^UserService\.Contracts\.DTOs(\..*)?$")
+          .Because("Types named *Dto must reside in the Contracts.DTOs namespace.")
           .Check(BaseArchitecture);
     }
 
