@@ -80,6 +80,7 @@ public class DomainArchitectureTests : BaseArchitectureTest
 
     var aggregateRoots = DomainLayer
         .GetObjects(BaseArchitecture)
+        .Where(t => t.Assembly.NameEquals(DomainAssembly?.GetName().Name))
         .Where(t => t.ImplementsInterface(aggregateRootInterface))
         .ToList();
 
