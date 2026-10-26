@@ -50,8 +50,6 @@ public class DomainArchitectureTests : BaseArchitectureTest
         .Are(domainEntities)
         .Should()
         .BeAssignableTo(typeof(Entity<>))
-        .OrShould()
-        .BeAssignableTo(typeof(IEntity))
         .Because("All domain entities must inherit Entity or Entity<TId> for consistent identity, equality, and lifecycle management.")
         .Check(BaseArchitecture);
 
