@@ -18,6 +18,8 @@ Add indexed entries for additional audiences. The singular `Authentication__Goog
 - Separate Google and Apple issuer allowlists and metadata endpoints.
 - Fail-closed behavior when audiences are not configured.
 - Claims are consumed only from the validated principal; email is not an account merge key.
+- Signing-key refresh is requested when a token references an unknown signing key.
+- Metadata managers are isolated per validator instance, allowing deterministic tests without provider network access.
 - No raw provider tokens are logged.
 
-Metadata retrieval requires outbound HTTPS access. The current unit tests cover malformed-token rejection, missing-audience fail-closed behavior, and unsupported providers. Controlled-key integration tests for forged/expired tokens, wrong issuer/audience, and key rotation remain required before security validation is complete.
+The test suite uses controlled RSA signing keys to verify valid-token acceptance and rejection of malformed tokens, missing audiences, unsupported providers, wrong issuers, wrong audiences, expired tokens, and tokens signed by an untrusted key. Key-rotation behavior and live provider metadata interoperability still require verification in CI or a controlled integration environment. Metadata retrieval requires outbound HTTPS access in deployed environments.
