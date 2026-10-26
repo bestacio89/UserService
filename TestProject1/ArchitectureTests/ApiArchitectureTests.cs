@@ -31,10 +31,10 @@ public class ApiArchitectureTests : BaseArchitectureTest
       Console.WriteLine("ðŸŸ¡ No  Service Intefaces found â€” skipping contract interface enforcement (virgin template).");
       return;
     }
-    ArchRuleDefinition // Get types from the provider
+    ArchRuleDefinition // Scope the rule to controller candidates from the API assembly.
         .Classes()
         .That()
-        .HaveNameEndingWith("Controller")
+        .Are(apiObjects)
         .Should()
         .BeAssignableTo(typeof(ControllerBase))
         .AndShould()
