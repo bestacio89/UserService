@@ -38,7 +38,7 @@ public sealed class ExternalIdentityTokenValidator
 
     var (metadataAddress, issuers, audienceKeys) = GetProviderSettings(provider);
     var validAudiences = audienceKeys
-        .SelectMany(key => _configuration.GetSection(key).Get<string[]>() ?? [])
+        .SelectMany(key => _configuration.GetSection(key).GetChildren().Select(child => child.Value))
         .Append(_configuration[$"Authentication:{provider}:ClientId"])
         .Where(value => !string.IsNullOrWhiteSpace(value))
         .Select(value => value!)
