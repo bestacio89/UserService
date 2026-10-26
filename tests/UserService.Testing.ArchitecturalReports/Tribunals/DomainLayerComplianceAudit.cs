@@ -85,6 +85,7 @@ namespace UserService.Testing.ArchitecturalReports.Layers
 
           var aggregateRoots = DomainLayer
               .GetObjects(BaseArchitecture)
+              .Where(t => t.Assembly.NameEquals(DomainAssembly?.GetName().Name))
               .Where(t => t.ImplementsInterface(aggregateRootInterface))
               .ToList();
 
