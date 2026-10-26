@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.Commands.Authentication;
 using UserService.Application.Commands.Authentication.Services;
+using UserService.Application.Validation;
 using UserService.Contracts.Commands.Authentication;
 using UserService.Contracts.DTOs.Authentication;
 using UserService.Domain.Identity;
@@ -39,6 +40,14 @@ public sealed class AuthController : ControllerBase
 
       var result = await _authService.LoginAsync(command, ct);
       return Ok(ToResponse(result));
+    }
+    catch (AccountAccessDeniedException)
+    {
+      return StatusCode(StatusCodes.Status403Forbidden);
+    }
+    catch (AccountAccessDeniedException)
+    {
+      return StatusCode(StatusCodes.Status403Forbidden);
     }
     catch (UnauthorizedAccessException)
     {
