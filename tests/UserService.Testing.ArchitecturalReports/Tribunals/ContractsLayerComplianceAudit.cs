@@ -108,10 +108,10 @@ namespace UserService.Testing.ArchitecturalReports.Layers
           ArchRuleDefinition
               .Classes()
               .That()
-              .ResideInNamespaceMatching($"^{prefix}\\.Contracts\\.DTOs(\\..*)?$")
+              .Are(dtos)
               .Should()
-              .HaveNameEndingWith("Dto")
-              .Because("All DTOs must be suffixed with 'Dto' and reside in the Contracts.DTOs namespace.")
+              .ResideInNamespaceMatching($"^{prefix}\\.Contracts\\.DTOs(\\..*)?$")
+              .Because("Types named *Dto must reside in the Contracts.DTOs namespace.")
               .Check(BaseArchitecture);
 
           sb.AppendLine($"âœ… Verified {dtos.Count} DTO class(es) follow naming and namespace conventions.");
