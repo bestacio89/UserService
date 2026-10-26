@@ -51,11 +51,13 @@ namespace UserService.Testing
       var solutionPrefix =
         assembliesToLoad
           .Select(a => a.GetName().Name)
-          .FirstOrDefault(name => name.EndsWith(".Domain", StringComparison.OrdinalIgnoreCase)\n                   && !name.StartsWith("Franz.Common", StringComparison.OrdinalIgnoreCase))
+          .FirstOrDefault(name => name.EndsWith(".Domain", StringComparison.OrdinalIgnoreCase) 
+                   && !name.StartsWith("Franz.Common", StringComparison.OrdinalIgnoreCase))
           ?.Split('.')[0]
         ?? assembliesToLoad
           .Select(a => a.GetName().Name)
-          .FirstOrDefault(name => name.EndsWith(".API", StringComparison.OrdinalIgnoreCase)\n                   && !name.StartsWith("Franz.Common", StringComparison.OrdinalIgnoreCase))
+          .FirstOrDefault(name => name.EndsWith(".API", StringComparison.OrdinalIgnoreCase) 
+                   && !name.StartsWith("Franz.Common", StringComparison.OrdinalIgnoreCase))
           ?.Split('.')[0]
         ?? assembliesToLoad
           .Where(a => !a.GetName().Name.StartsWith("Franz.Common", StringComparison.OrdinalIgnoreCase)
