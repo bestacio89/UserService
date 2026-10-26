@@ -17,10 +17,11 @@ public sealed class TokenServiceTests
   public void ValidateRefreshToken_AcceptsSignedRefreshToken()
   {
     var service = CreateService();
-    var principal = service.ValidateRefreshToken(CreateToken("refresh", DateTime.UtcNow.AddMinutes(5)));
+    var token = CreateToken("refresh", DateTime.UtcNow.AddMinutes(5));
+    var principal = service.ValidateRefreshToken(token);
 
     Assert.Equal("refresh", principal.FindFirst("typ")?.Value);
-    Assert.Equal(service.HashRefreshToken(CreateToken("refresh", DateTime.UtcNow.AddMinutes(5))).Length, 64);
+    Assert.Equal(64, service.HashRefreshToken(token).Length);
   }
 
   [Fact]
