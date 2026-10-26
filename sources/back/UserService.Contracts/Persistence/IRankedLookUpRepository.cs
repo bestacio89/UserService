@@ -2,7 +2,7 @@
 using UserService.Contracts.DTOs.Ranked;
 using UserService.Domain.Ranked;
 
-namespace UserService.Application.ReadModels.Ranked;
+namespace UserService.Contracts.Persistence;
 
 public interface IRankedLookupRepository : IScopedDependency
 {

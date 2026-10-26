@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using UserService.Application.ReadModels.Users;
+using UserService.Contracts.Persistence;
 using UserService.Domain.Users;
 
 

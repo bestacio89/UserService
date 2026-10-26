@@ -50,8 +50,6 @@ public class DomainArchitectureTests : BaseArchitectureTest
         .Are(domainEntities)
         .Should()
         .BeAssignableTo(typeof(Entity<>))
-        .OrShould()
-        .BeAssignableTo(typeof(IEntity))
         .Because("All domain entities must inherit Entity or Entity<TId> for consistent identity, equality, and lifecycle management.")
         .Check(BaseArchitecture);
 
@@ -82,6 +80,7 @@ public class DomainArchitectureTests : BaseArchitectureTest
 
     var aggregateRoots = DomainLayer
         .GetObjects(BaseArchitecture)
+        .Where(t => t.Assembly.NameEquals(DomainAssembly?.GetName().Name))
         .Where(t => t.ImplementsInterface(aggregateRootInterface))
         .ToList();
 

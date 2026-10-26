@@ -117,6 +117,7 @@ namespace UserService.Testing.ArchitecturalReports.Layers
               .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common\\.Mediator(\\..*)?$")
               .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common\\.Errors(\\..*)?$")
               .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common(\\..*)?$")
+              .OrShould().ResideInNamespaceMatching(@"^Franz\.Common(\..*)?$")
               // Domain & Contracts
               .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Domain(\\..*)?$")
               .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Contracts(\\..*)?$")

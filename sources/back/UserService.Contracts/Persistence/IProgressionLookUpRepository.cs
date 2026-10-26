@@ -2,7 +2,7 @@ using Franz.Common.DependencyInjection;
 using UserService.Contracts.DTOs.Progression;
 using UserService.Domain.Progression;
 
-namespace UserService.Application.ReadModels.Progression;
+namespace UserService.Contracts.Persistence;
 
 public interface IUserProgressionLookupRepository : IScopedDependency
 {

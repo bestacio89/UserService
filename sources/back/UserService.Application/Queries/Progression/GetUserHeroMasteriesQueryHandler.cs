@@ -1,7 +1,7 @@
 ﻿
 using Franz.Common.Mapping.Abstractions;
 using Franz.Common.Mediator.Handlers;
-using UserService.Application.ReadModels.Progression;
+using UserService.Contracts.Persistence;
 using UserService.Contracts.DTOs.Progression;
 using UserService.Contracts.Queries.Progression;
 using UserService.Domain.Progression;

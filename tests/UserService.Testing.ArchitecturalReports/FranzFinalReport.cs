@@ -64,7 +64,7 @@ namespace UserService.Testing.ArchitecturalReports
 
       Console.WriteLine(report.ToString());
 
-      Assert.True(failed == 0, $"The Tribunal has found {failed} layer(s) guilty of architectural treason.");
+      Assert.True(failed == 0, $"{report}{Environment.NewLine}The Tribunal has found {failed} layer(s) guilty of architectural treason.");
     }
 
     private static (string Verdict, string Sass) GetSassLevel(double failureRate)

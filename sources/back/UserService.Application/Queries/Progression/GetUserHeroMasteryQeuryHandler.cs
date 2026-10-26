@@ -3,7 +3,7 @@ using Franz.Common.Mediator.Handlers;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using UserService.Application.ReadModels.Progression;
+using UserService.Contracts.Persistence;
 using UserService.Contracts.DTOs.Progression;
 using UserService.Contracts.Queries.Progression;
 using UserService.Domain.Progression;

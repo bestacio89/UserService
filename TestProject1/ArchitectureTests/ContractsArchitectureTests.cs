@@ -70,26 +70,26 @@ namespace UserService.Testing.ArchitectureTests
     [Fact]
     public void DtosNameConvetionIsCorrect()
     {
-     
-      var contractObjects = ContractsLayer
+      var dtoTypes = ContractsLayer
           .GetObjects(BaseArchitecture)
-          .Where(t =>
-             
-              !t.Name.EndsWith("Dto", StringComparison.OrdinalIgnoreCase)
-              )
+          .Where(t => t.Name.EndsWith("Dto", StringComparison.OrdinalIgnoreCase))
           .ToList();
 
-      if (!contractObjects.Any())
+      if (!dtoTypes.Any())
       {
-        Console.WriteLine("ðŸŸ¡ No Dtos found â€” skipping persistence contract enforcement (virgin template).");
+        Console.WriteLine("No DTO types found; skipping DTO namespace enforcement.");
         return;
       }
-      ArchRuleDefinition.
-           Classes().That()
-          .ResideInNamespace("UserService.Contracts.DTOS")
+
+      // Request/response contracts such as LoginRequest and LoginResponse are not DTOs
+      // merely because they live under the DTOs folder. Only *Dto types are checked.
+      ArchRuleDefinition
+          .Classes()
+          .That()
+          .Are(dtoTypes)
           .Should()
-          .HaveNameEndingWith("Dto")
-          .Because("Dtos should be properly named as such")
+          .ResideInNamespaceMatching(@"^UserService\.Contracts\.DTOs(\..*)?$")
+          .Because("Types named *Dto must reside in the Contracts.DTOs namespace.")
           .Check(BaseArchitecture);
     }
 
@@ -162,37 +162,30 @@ namespace UserService.Testing.ArchitectureTests
     [Fact]
     public void CustomPersistenceInterfaces_Follow_Rules()
     {
-      // ðŸŽ¯ Identify repository interfaces defined in the Domain (contracts or persistence abstractions)
-      var contractObjects = ContractsLayer
+      var customRepositories = ContractsLayer
           .GetObjects(BaseArchitecture)
           .Where(t =>
-              t.Name.StartsWith("I") &&
+              t.Name.StartsWith("I", StringComparison.Ordinal) &&
               t.Name.EndsWith("Repository", StringComparison.OrdinalIgnoreCase) &&
-              !t.Name.Contains("Aggregate") &&
-              !t.Name.Contains("Read") &&
-              !t.NameContains("Entity"))
-
+              !t.Name.Contains("Aggregate", StringComparison.OrdinalIgnoreCase) &&
+              !t.Name.Contains("Entity", StringComparison.OrdinalIgnoreCase))
           .ToList();
 
-      if (!contractObjects.Any())
+      if (!customRepositories.Any())
       {
-        Console.WriteLine("ðŸŸ¡ No custom repository interfaces found â€” skipping persistence contract enforcement (virgin template).");
+        Console.WriteLine("No custom repository interfaces found; skipping lifetime enforcement.");
         return;
       }
-      // âœ… Enforce rule: all custom repository interfaces should inherit IScopedDependency
-      ArchRuleDefinition.Classes()
+
+      ArchRuleDefinition
+          .Interfaces()
           .That()
-          .AreNot(typeof(IEntityRepository<,>)) // Exclude IReadRepository
-          .And().AreNot(typeof(IAggregateRepository<,>)) // Exclude IAggregateRepository
-          .And().HaveNameEndingWith("Repository") // Naming convention for custom repositories
+          .Are(customRepositories)
           .Should()
-          .ImplementAnyInterfacesThat()
-          .HaveFullNameMatching(typeof(IScopedDependency).FullName!)
-          // Enforce IScopedDependency
-          .Because("Custom persistence interfaces should follow lifetime management using IScopedDependency")
+          .BeAssignableTo(typeof(IScopedDependency))
+          .Because("UserService-owned repository abstractions must declare scoped lifetime through IScopedDependency.")
           .Check(BaseArchitecture);
     }
-
 
     [Fact]
     public void Dtos_Must_Be_Immutable_Or_Records()

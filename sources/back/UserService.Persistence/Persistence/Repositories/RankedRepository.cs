@@ -1,4 +1,4 @@
-﻿using UserService.Application.ReadModels.Ranked;
+﻿using UserService.Contracts.Persistence;
 using UserService.Contracts.DTOs.Ranked;
 using UserService.Domain.Ranked;
 

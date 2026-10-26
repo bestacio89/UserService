@@ -54,7 +54,7 @@ namespace UserService.Testing.ArchitecturalReports
         Console.WriteLine("---------------------------------------------------------------");
         Console.ResetColor();
 
-        Assert.Fail($"{tribunalName} detected {violationCount} architectural violation(s).");
+        Assert.Fail($"{tribunalName} detected {violationCount} architectural violation(s).{Environment.NewLine}{sb}");
       }
       else
       {

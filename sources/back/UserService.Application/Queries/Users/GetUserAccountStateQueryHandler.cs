@@ -1,5 +1,5 @@
 ﻿using Franz.Common.Mediator.Handlers;
-using UserService.Application.ReadModels.Users;
+using UserService.Contracts.Persistence;
 using UserService.Contracts.Queries.Admin;
 using UserService.Contracts.Queries.Users;
 using UserService.Domain.Users;

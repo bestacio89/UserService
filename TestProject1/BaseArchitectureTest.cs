@@ -31,7 +31,7 @@ namespace UserService.Testing
 
       // Include Franz.Common and Franz.Common.Mediator
       const string allowedPattern =
-        @".*\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts)(\.dll)?$";
+        @".*(Franz\.Common(\..*)?|FranzTesting|\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts))(\.dll)?$";
 
       EnsureAssembliesLoaded(allowedPattern);
 
@@ -40,17 +40,33 @@ namespace UserService.Testing
         .GetAssemblies()
         .Where(a => Regex.IsMatch(
             a.GetName().Name,
-            @"\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts)$",
+            @"^(Franz\.Common(\..*)?|FranzTesting|.*\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts))$",
             RegexOptions.IgnoreCase))
         .Distinct()
         .ToArray();
 
       // Detect solution prefix (best-effort cosmetic)
-      var solutionPrefix = assembliesToLoad
-        .Select(a => a.GetName().Name.Split('.')[0])
-        .GroupBy(x => x)
-        .OrderByDescending(g => g.Count())
-        .FirstOrDefault()?.Key ?? "Unknown";
+      // Resolve the application prefix from a solution-owned layer assembly first.
+      // Loading the Franz.Common dependency graph must not make "Franz" the solution prefix.
+      var solutionPrefix =
+        assembliesToLoad
+          .Select(a => a.GetName().Name)
+          .FirstOrDefault(name => name.EndsWith(".Domain", StringComparison.OrdinalIgnoreCase) 
+                   && !name.StartsWith("Franz.Common", StringComparison.OrdinalIgnoreCase))
+          ?.Split('.')[0]
+        ?? assembliesToLoad
+          .Select(a => a.GetName().Name)
+          .FirstOrDefault(name => name.EndsWith(".API", StringComparison.OrdinalIgnoreCase) 
+                   && !name.StartsWith("Franz.Common", StringComparison.OrdinalIgnoreCase))
+          ?.Split('.')[0]
+        ?? assembliesToLoad
+          .Where(a => !a.GetName().Name.StartsWith("Franz.Common", StringComparison.OrdinalIgnoreCase)
+                   && !a.GetName().Name.Equals("FranzTesting", StringComparison.OrdinalIgnoreCase))
+          .Select(a => a.GetName().Name.Split('.')[0])
+          .GroupBy(name => name)
+          .OrderByDescending(group => group.Count())
+          .FirstOrDefault()?.Key
+        ?? "Unknown";
 
       Console.WriteLine($"âš™ï¸  Detected Solution Prefix: {solutionPrefix}");
       foreach (var asm in assembliesToLoad) Console.WriteLine($"   â€¢ {asm.GetName().Name}");

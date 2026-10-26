@@ -1,5 +1,6 @@
 ﻿using Franz.Common.Business.Repositories;
 using Franz.Common.EntityFramework;
+using Franz.Common.Mediator.Pipelines.Core;
 using UserService.Application.Commands.Authentication.Services;
 using UserService.Application.Validation;
 using UserService.Contracts.Commands.Authentication;

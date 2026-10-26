@@ -3,6 +3,7 @@ using UserService.Application;
 using Franz.Common.Http.Bootstrap.Extensions;
 using Franz.Common.Logging.Extensions;
 using UserService.Persistence;
+using UserService.Identity;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,7 @@ builder.Services.AddFranzTelemetry(env, config);
 // 2. SELF-HEALING ARCHITECTURE CORE (AUTONOMOUS DISCOVERY)
 // =========================================================================
 builder.Services.RegisterApplicationServices();
+builder.Services.AddIdentityProviders();
 
 // Manages Caching, DbContext, and Automated Generic CRUD Topologies
 builder.Services.RegisterPersistenceServices<ApplicationDbContext>(config);
