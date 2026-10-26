@@ -36,7 +36,7 @@ public sealed class ExternalIdentityTokenValidatorTests
     await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
         () => validator.ValidateAsync(
             IdentityProvider.Guest,
-            "not-a-jwt",
+            "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.signature",
             CancellationToken.None));
   }
 }
