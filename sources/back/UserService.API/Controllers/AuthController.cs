@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using UserService.Application.Commands.Authentication;
 using UserService.Application.Commands.Authentication.Services;
 using UserService.Contracts.Commands.Authentication;
@@ -23,20 +23,61 @@ public sealed class AuthController : ControllerBase
       [FromBody] LoginRequest request,
       CancellationToken ct)
   {
-    var command = new LoginUserCommand(
-        Provider: Enum.Parse<IdentityProvider>(request.Provider, ignoreCase: true),
-        Identifier: request.Identifier,
-        Secret: request.Secret,
-        DeviceId: request.DeviceId
-    );
+    if (!Enum.TryParse<IdentityProvider>(request.Provider, ignoreCase: true, out var provider)
+        || !Enum.IsDefined(provider))
+    {
+      return BadRequest("Unsupported identity provider.");
+    }
 
-    var result = await _authService.LoginAsync(command, ct);
+    try
+    {
+      var command = new LoginUserCommand(
+          Provider: provider,
+          Identifier: request.Identifier,
+          Secret: request.Secret,
+          DeviceId: request.DeviceId);
 
-    return Ok(new LoginResponse(
-        result.UserId,
-        result.AccessToken,
-        result.RefreshToken,
-        result.ExpiresAt
-    ));
+      var result = await _authService.LoginAsync(command, ct);
+      return Ok(ToResponse(result));
+    }
+    catch (UnauthorizedAccessException)
+    {
+      return Unauthorized();
+    }
   }
+
+  [HttpPost("refresh")]
+  public async Task<ActionResult<LoginResponse>> Refresh(
+      [FromBody] RefreshTokenRequest request,
+      CancellationToken ct)
+  {
+    try
+    {
+      var result = await _authService.RefreshAsync(request.RefreshToken, ct);
+      return Ok(ToResponse(result));
+    }
+    catch (UnauthorizedAccessException)
+    {
+      return Unauthorized();
+    }
+  }
+
+  [HttpPost("logout")]
+  public async Task<IActionResult> Logout(
+      [FromBody] RefreshTokenRequest request,
+      CancellationToken ct)
+  {
+    try
+    {
+      await _authService.LogoutAsync(request.RefreshToken, ct);
+      return NoContent();
+    }
+    catch (UnauthorizedAccessException)
+    {
+      return Unauthorized();
+    }
+  }
+
+  private static LoginResponse ToResponse(LoginResult result)
+      => new(result.UserId, result.AccessToken, result.RefreshToken, result.ExpiresAt);
 }
