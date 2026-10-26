@@ -1,8 +1,8 @@
 ﻿using Franz.Common.Mapping.Abstractions;
 using Franz.Common.Mediator.Handlers;
-using UserService.Application.ReadModels.Progression;
-using UserService.Application.ReadModels.Ranked;
-using UserService.Application.ReadModels.Users;
+using UserService.Contracts.Persistence;
+using UserService.Contracts.Persistence;
+using UserService.Contracts.Persistence;
 using UserService.Contracts.DTOs.Progression;
 using UserService.Contracts.DTOs.Ranked;
 using UserService.Contracts.DTOs.Users;
