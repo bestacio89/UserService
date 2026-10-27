@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using UserService.Domain.Authentication;
 using UserService.Domain.Users;
 
@@ -10,5 +7,9 @@ public interface ILoginSessionService
 {
   UserSession CreateSession(User user, string? deviceId);
 
+  Task<UserSession?> GetByIdAsync(Guid sessionId, CancellationToken ct);
+
   Task PersistAsync(UserSession session, CancellationToken ct);
+
+  Task UpdateAsync(UserSession session, CancellationToken ct);
 }

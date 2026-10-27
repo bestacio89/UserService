@@ -1,4 +1,4 @@
-﻿using Franz.Common.Business.Repositories;
+using Franz.Common.Business.Repositories;
 using Franz.Common.Business.Domain.Factories;
 using UserService.Domain.Authentication;
 using UserService.Domain.Users;
@@ -20,15 +20,19 @@ public sealed class LoginSessionService : ILoginSessionService
 
   public UserSession CreateSession(User user, string? deviceId)
   {
+    ArgumentNullException.ThrowIfNull(user);
+
     var session = _sessionFactory.Create();
-
     session.Define(user.Id, deviceId);
-
     return session;
   }
 
-  public async Task PersistAsync(UserSession session, CancellationToken ct)
-  {
-    await _sessions.AddAsync(session, ct);
-  }
+  public Task<UserSession?> GetByIdAsync(Guid sessionId, CancellationToken ct)
+      => _sessions.GetByIdAsync(sessionId, ct);
+
+  public Task PersistAsync(UserSession session, CancellationToken ct)
+      => _sessions.AddAsync(session, ct);
+
+  public Task UpdateAsync(UserSession session, CancellationToken ct)
+      => _sessions.UpdateAsync(session, ct);
 }
