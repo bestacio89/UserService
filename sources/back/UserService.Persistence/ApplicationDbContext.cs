@@ -8,6 +8,7 @@ using UserService.Domain.Ranked;
 using UserService.Domain.Progression;
 using UserService.Domain.Identity;
 using UserService.Domain.Wallet;
+using UserService.Domain.Matches;
 
 namespace UserService.Persistence;
 
@@ -78,6 +79,37 @@ public class ApplicationDbContext : DbContextBase
     });
 
     // =========================
+    // USER MATCH HISTORY
+    // =========================
+    modelBuilder.Entity<UserMatchRecord>(builder =>
+    {
+      builder.Property(x => x.EventId).IsRequired();
+      builder.Property(x => x.MatchId).IsRequired();
+      builder.Property(x => x.UserId).IsRequired();
+      builder.Property(x => x.GameVersionId).IsRequired();
+      builder.Property(x => x.SnapshotId).IsRequired();
+      builder.Property(x => x.SnapshotHash).IsRequired().HasMaxLength(128);
+      builder.Property(x => x.GameMode).IsRequired().HasMaxLength(50);
+      builder.Property(x => x.StartedAt).IsRequired();
+      builder.Property(x => x.CompletedAt).IsRequired();
+      builder.Property(x => x.IsRanked).IsRequired();
+      builder.Property(x => x.RankedEligible).IsRequired();
+      builder.Property(x => x.HeroId).IsRequired();
+      builder.Property(x => x.HeroClassId).IsRequired();
+      builder.Property(x => x.TeamId).IsRequired();
+      builder.Property(x => x.Outcome).IsRequired();
+      builder.Property(x => x.Kills).IsRequired();
+      builder.Property(x => x.Deaths).IsRequired();
+      builder.Property(x => x.Assists).IsRequired();
+      builder.Property(x => x.ObjectiveScore).IsRequired();
+
+      // A match may contain many users, but each user's result is recorded once.
+      builder.HasIndex(x => new { x.MatchId, x.UserId }).IsUnique();
+      builder.HasIndex(x => new { x.UserId, x.CompletedAt });
+      builder.HasIndex(x => x.EventId);
+    });
+
+    // =========================
     // CURRENCY (catalog)
     // =========================
     modelBuilder.Entity<Currency>(builder =>
@@ -129,4 +161,5 @@ public class ApplicationDbContext : DbContextBase
   public DbSet<UserIdentity> UserIdentities => Set<UserIdentity>();
   public DbSet<Currency> Currencies => Set<Currency>();
   public DbSet<UserWalletBalance> UserWalletBalances => Set<UserWalletBalance>();
+  public DbSet<UserMatchRecord> UserMatchRecords => Set<UserMatchRecord>();
 }
