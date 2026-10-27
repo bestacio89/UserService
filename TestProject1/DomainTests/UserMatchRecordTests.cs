@@ -1,4 +1,5 @@
 using UserService.Domain.Matches;
+using Xunit;
 
 namespace UserService.Testing.DomainTests;
 
