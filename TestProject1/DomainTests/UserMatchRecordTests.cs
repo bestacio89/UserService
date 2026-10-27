@@ -7,7 +7,7 @@ public sealed class UserMatchRecordTests
     [Fact]
     public void Define_ShouldPreserveMatchAndSnapshotProvenance()
     {
-        var record = new UserMatchRecord();
+        var record = (UserMatchRecord)Activator.CreateInstance(typeof(UserMatchRecord), nonPublic: true)!;
         var startedAt = DateTimeOffset.UtcNow.AddMinutes(-20);
         var completedAt = startedAt.AddMinutes(18);
 
