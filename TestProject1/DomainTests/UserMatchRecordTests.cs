@@ -48,7 +48,7 @@ public sealed class UserMatchRecordTests
     [Fact]
     public void Define_ShouldRejectCompletionBeforeStart()
     {
-        var record = new UserMatchRecord();
+        var record = (UserMatchRecord)Activator.CreateInstance(typeof(UserMatchRecord), nonPublic: true)!;
         var startedAt = DateTimeOffset.UtcNow;
 
         Assert.Throws<ArgumentOutOfRangeException>(() => record.Define(
@@ -76,7 +76,7 @@ public sealed class UserMatchRecordTests
     [Fact]
     public void Define_ShouldRejectNegativeGameplayStatistics()
     {
-        var record = new UserMatchRecord();
+        var record = (UserMatchRecord)Activator.CreateInstance(typeof(UserMatchRecord), nonPublic: true)!;
         var startedAt = DateTimeOffset.UtcNow.AddMinutes(-10);
 
         Assert.Throws<ArgumentOutOfRangeException>(() => record.Define(
@@ -104,7 +104,7 @@ public sealed class UserMatchRecordTests
     [Fact]
     public void Define_ShouldRejectRankedEligibilityForUnrankedMatch()
     {
-        var record = new UserMatchRecord();
+        var record = (UserMatchRecord)Activator.CreateInstance(typeof(UserMatchRecord), nonPublic: true)!;
         var startedAt = DateTimeOffset.UtcNow.AddMinutes(-10);
 
         Assert.Throws<ArgumentException>(() => record.Define(
